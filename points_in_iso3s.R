@@ -9,7 +9,7 @@ twelve_km_buffer <- F
 
 if(!require(pacman)) {
   install.packages("pacman"); require(pacman)}
-p_load(data.table, rgdal, rgeos, sp, magrittr, plyr, maps, mapdata)
+p_load(data.table, rgdal, rgeos, sp, magrittr, plyr, ggplot2)
 
 j <- ifelse(Sys.info()[1]=="Windows", "J:/", "/snfs1/")
 
@@ -123,6 +123,10 @@ save(fix, file=paste0(j, "temp/gmanny/fix_points_outside_of_", buffer, "km_buffe
 
 #used when running locally in case of package installation issues
 if (j == "J:/"){load(paste0("J:/temp/gmanny/fix_points_outside_of_", buffer, "km_buffer.RData"))}
+if (!("global_shp" %in% ls())){
+  global_shp <- readOGR(dsn=paste0(j, "DATA/SHAPE_FILES/GBD_geographies/master/GBD_2016/inset_maps/noSubs/GBD_WITH_INSETS_NOSUBS.shp"))
+  global_shp <- spTransform(global_shp, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")) 
+}
 af_shp <- subset(global_shp, iso3 %in% s1$alpha.3)
 png(filename="points_outside_borders.png")
 fix <- data.frame(fix)
@@ -130,7 +134,7 @@ shp <- fortify(af_shp)
 shp <- subset(shp, lat > -40) #drop zooms in shapefile (inaccurately geopositioned to allowed a larger-than-actual view)
 #af <- merge(shp, af_shp, by.x="id", by.y="ORIG_FID")
 #af <- af[order(af$order),]
-ggplot(fix) + geom_polygon(data=shp, aes(x=long, y=lat, group=group), color="white") + 
-  geom_point(aes(x=long, y=lat, color=nid), size=6) + coord_fixed() + 
+ggplot() + coord_fixed() + geom_polygon(data=shp, aes(x=long, y=lat, group=group), color="white") + 
+  geom_point(data=fix, aes(x=long, y=lat, color=nid), size=6) +  
   labs(title=paste0("Points falling ", buffer, "km outside of national borders"), x="Longitude", y="Latitude")
 dev.off()

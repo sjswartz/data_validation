@@ -1,0 +1,7 @@
+library(sp)
+library(rgdal)
+coors <- matrix(c(9.65, 4.035, 9.85, 4.035, 9.85, 4.025, 9.65, 4.025), ncol=2, byrow=T)
+P1 <- Polygon(coors)
+sp1 = SpatialPolygons(list(Polygons(list(P1), ID = "a")), proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"))
+sp1 <- as(sp1, "SpatialPolygonsDataFrame")
+writeOGR(sp1, dsn="H:/backups/Documents/shapefiles/", layer="CMR_DHS_1991_bounding_box1", driver="ESRI Shapefile")
