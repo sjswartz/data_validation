@@ -2,7 +2,7 @@ library(dplyr)
 library(magrittr)
 library(data.table)
 
-indicator <- "diarrhea"
+indicator <- "wash"
 collapse_data_type <- "Rdata" #can be csv
 
 j <- ifelse(Sys.info()[1]=="Windows", "J:/", "/snfs1/")
@@ -44,7 +44,10 @@ m[, n:= 1]
 m[,country := substring(country, 1, 3)]
 m[, n_by_country := sum(n), by=country]
 
-uq <- distinct(m, country, n_by_country, Stage)
+uq <- distinct(m, country, name, n_by_country, Stage)
+
+uq[!(country %in% unique(data_inventory$country)), n_by_country := 0]
+uq <- uq[order(n_by_country)]
 
 africa <- uq[Stage == "1"]
 stage_2 <- uq[Stage == "2a" | Stage == "2b"]
