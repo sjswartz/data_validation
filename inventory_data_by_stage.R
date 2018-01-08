@@ -48,7 +48,9 @@ uq <- distinct(m, country, name, n_by_country, Stage)
 
 uq[!(country %in% unique(data_inventory$country)), n_by_country := 0]
 uq <- uq[order(n_by_country)]
-
+uq <- uq[Stage == "1" | Stage == "2a" | Stage == '2b']
+setnames(uq, "n_by_country", "number_of_data_points")
+write.csv(uq, paste0(j, "temp/gmanny/data_inventory.csv"), row.names=F, na="")
 africa <- uq[Stage == "1"]
 stage_2 <- uq[Stage == "2a" | Stage == "2b"]
 
