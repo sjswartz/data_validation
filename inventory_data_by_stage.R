@@ -5,11 +5,16 @@ library(feather)
 
 indicator <- "wash"
 collapse_data_type <- "feather" #can be csv, Rdata or feather
+you_want_stage_2 <- TRUE #only relevant for WaSH
 
 j <- ifelse(Sys.info()[1]=="Windows", "J:/", "/snfs1/")
 
 #find most recent indicator collapse
-path <- paste0(j, "LIMITED_USE/LU_GEOSPATIAL/collapsed/", indicator)
+if (indicator == "wash" & you_want_stage_2){
+  path <- paste0(j, "LIMITED_USE/LU_GEOSPATIAL/geo_matched/", indicator)  
+} else{
+  path <- paste0(j, "LIMITED_USE/LU_GEOSPATIAL/collapsed/", indicator)
+}
 collapse_data_type <- tolower(collapse_data_type)
 file_end <- paste0(".", collapse_data_type, "$")
 files <- list.files(path, pattern=file_end, full.names = T, ignore.case=T) %>% grep(value=T, pattern="IND_AHS", invert=T) %>% grep(value=T, pattern="country", invert=T)
@@ -29,6 +34,7 @@ if (collapse_data_type == "rdata"){
     most_recent <- d[1:4, path]
   }
   feathers <- lapply(most_recent, read_feather)
+  feathers <- lapply(feathers, data.table)
   collapsed <- rbindlist(feathers, fill=T, use.names=T)
 } else{
   stop("This script only accepts Rdata, feather and csv as collapse_data_type arguments.")
@@ -38,7 +44,9 @@ if (collapse_data_type == "rdata"){
 try(setnames(collapsed, "svy_id", "nid"))
 try(setnames(collapsed, "iso3", "country"))
 try(setnames(collapsed, "ihme_loc_id", "country"))
-try(setnames(collapsed, "year_start", "start_year"))
+if (!("start_year" %in% names(collapsed))){
+  try(setnames(collapsed, "year_start", "start_year")) 
+}
 try(setnames(collapsed, "source", "survey_series"))
 
 data_inventory <- collapsed %>% distinct(nid, country, survey_series, start_year)
